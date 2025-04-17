@@ -8,24 +8,87 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
+        
       - name: Extract Variables from Issue
         id: extract
         uses: actions/github-script@v4
         with:
           script: |
-            // 이슈 본문에서 필요한 변수 추출 로직
+            const issue = context.payload.issue;
+            const body = issue.body;
+            
+            // 이슈 본문에서 필요한 변수 추출
+            const projectNameMatch = body.match(/프로젝트 이름: (.+)/);
+            const projectName = projectNameMatch ? projectNameMatch[1].trim() : 'default';
+            
+            // 리소스 타입 추출
+            const resourcesMatch = body.match(/필요 리소스: (.+)/);
+            const resources = resourcesMatch ? resourcesMatch[1].trim() : '';
+            
+            // 출력 설정
+            core.setOutput('project_name', projectName);
+            core.setOutput('resource_group', `${projectName}-rg`.replace(/ /g, '-'));
+            
+      - name: Create Terraform Variables File
+        run: |
+          cat > ./terraform/ai-poc/terraform.tfvars <<EOF
+          project_name = "${{ steps.extract.outputs.project_name }}"
+          resource_group_name = "${{ steps.extract.outputs.resource_group }}"
+          EOF
+          
       - name: Terraform Init
         run: terraform init
+        working-directory: ./terraform/ai-poc
+        
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: ./terraform/ai-poc
+        
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./terraform/ai-poc
+        
+      - name: Get Terraform Outputs
+        id: terraform_output
+        run: |
+          echo "::set-output name=resources::$(terraform output -json deployed_resources)"
+        working-directory: ./terraform/ai-poc
+        
       - name: Post Result Comment
         uses: actions/github-script@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // 결과를 이슈에 댓글로 게시
+            const issue_number = context.payload.issue.number;
+            const resources = JSON.parse('${{ steps.terraform_output.outputs.resources }}');
+            
+            const comment = `
+            ## 리소스 프로비저닝 완료 ✅
+            
+            **프로젝트:** ${{ steps.extract.outputs.project_name }}
+            **리소스 그룹:** ${{ steps.extract.outputs.resource_group }}
+            
+            ### 생성된 리소스:
+            ${resources.map(r => `- ${r.name}: ${r.type} (${r.location})`).join('\n')}
+            
+            ### 액세스 정보:
+            - [Azure 포털에서 보기](https://portal.azure.com/#@${process.env.AZURE_TENANT}/resource/subscriptions/${process.env.AZURE_SUBSCRIPTION}/resourceGroups/${{ steps.extract.outputs.resource_group }})
+            - [비용 대시보드](https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/costanalysis)
+            
+            리소스는 태그 설정에 따라 만료일에 자동으로 삭제될 예정입니다.
+            `;
+            
+            await github.issues.createComment({
+              issue_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
