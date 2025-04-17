@@ -1,0 +1,17 @@
+name: "AI POC 리소스 요청"
+description: "AI POC 프로젝트를 위한 Azure 리소스 요청"
+title: "[리소스 요청]: "
+labels: ["AI-POC", "리소스 요청"]
+body:
+  - type: markdown
+    attributes:
+      value: "## AI POC 프로젝트 리소스 요청 양식"
+  - type: input
+    id: project-name
+    attributes:
+      label: 프로젝트 이름
+      description: "AI POC 프로젝트의 이름을 입력하세요"
+      placeholder: "예: 고객 이탈 예측 모델"
+    validations:
+      required: true
+  # 추가 필드들...
