@@ -1,13 +1,44 @@
-name: Provision AI Resources
+name: Provision AI Resources (Debug)
 on:
   issues:
     types: [labeled]
 jobs:
-  provision:
-    if: github.event.label.name == '승인됨' && contains(github.event.issue.labels.*.name, 'AI-POC')
+  debug:
     runs-on: ubuntu-latest
+    # 항상 실행되도록 설정
+    if: always()
     steps:
-      - uses: actions/checkout@v2
+      - name: Debug Workflow Trigger
+        uses: actions/github-script@v4
+        with:
+          script: |
+            console.log("이벤트 타입:", context.eventName);
+            console.log("액션:", context.payload.action);
+            console.log("추가된 라벨:", context.payload.label?.name);
+            console.log("모든 라벨:", JSON.stringify(context.payload.issue?.labels));
+            
+            const containsAIPOC = context.payload.issue?.labels?.some(label => label.name === 'AI-POC');
+            const containsApproved = context.payload.issue?.labels?.some(label => label.name === '승인됨');
+            
+            console.log("AI-POC 라벨 있음:", containsAIPOC);
+            console.log("승인됨 라벨 있음:", containsApproved);
+            console.log("라벨을 추가한 사용자:", context.payload.sender?.login);
+            
+            // 조건 부분 직접 평가
+            const labelCondition = context.payload.label?.name === '승인됨';
+            const labelsCondition = containsAIPOC;
+            
+            console.log("라벨 조건 충족:", labelCondition);
+            console.log("라벨스 조건 충족:", labelsCondition);
+            console.log("최종 조건 충족:", labelCondition && labelsCondition);
+
+  provision:
+    needs: debug
+    runs-on: ubuntu-latest
+    if: github.event.label.name == '승인됨' && contains(github.event.issue.labels.*.name, 'AI-POC')
+    steps:
+      - name: Echo Condition
+        run: echo "조건이 충족되어 프로비저닝 작업을 시작합니다."
       
       - name: Azure Login
         uses: azure/login@v1
