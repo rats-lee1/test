@@ -1,17 +1,125 @@
-name: "AI POC 리소스 요청"
-description: "AI POC 프로젝트를 위한 Azure 리소스 요청"
-title: "[리소스 요청]: "
-labels: ["AI-POC", "리소스 요청"]
+name: AI/ML POC 리소스 요청
+description: AI 또는 ML 관련 POC를 위한 Azure 리소스 신청
+title: "[AI-POC] "
+labels: ["AI-POC", "리소스-요청"]
+assignees:
+  - team-lead-username
+
 body:
   - type: markdown
     attributes:
-      value: "## AI POC 프로젝트 리소스 요청 양식"
+      value: |
+        ## AI/ML POC 리소스 요청 양식
+        Azure 리소스 요청을 위한 양식입니다. 모든 필수 항목(*)을 작성해 주세요.
+        승인 후 자동으로 리소스가 프로비저닝됩니다.
+
   - type: input
     id: project-name
     attributes:
       label: 프로젝트 이름
-      description: "AI POC 프로젝트의 이름을 입력하세요"
+      description: POC 프로젝트의 이름을 입력하세요
       placeholder: "예: 고객 이탈 예측 모델"
     validations:
       required: true
-  # 추가 필드들...
+
+  - type: textarea
+    id: business-purpose
+    attributes:
+      label: 비즈니스 목적
+      description: 이 POC의 비즈니스 목적 및 기대 효과를 설명하세요
+      placeholder: "이 POC는 고객 행동 데이터를 분석하여 고객 이탈 가능성을 예측하는 모델을 개발하기 위한 것입니다..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: resources
+    attributes:
+      label: 필요 리소스
+      description: POC에 필요한 Azure 리소스를 선택하세요
+      options:
+        - label: Azure Machine Learning
+        - label: Azure Databricks
+        - label: Azure Storage Account
+        - label: Azure Data Lake Storage
+        - label: Azure SQL Database
+        - label: Azure Cosmos DB
+        - label: Azure Synapse Analytics
+        - label: Azure Cognitive Services
+    validations:
+      required: true
+
+  - type: dropdown
+    id: resource-size
+    attributes:
+      label: 리소스 크기
+      description: 필요한 리소스의 규모를 선택하세요
+      options:
+        - 소 (개발/테스트용)
+        - 중 (일반 POC용)
+        - 대 (대용량 데이터 처리용)
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: duration
+    attributes:
+      label: 사용 기간
+      description: 예상 사용 기간을 선택하세요
+      options:
+        - 1개월
+        - 3개월
+        - 6개월
+        - 사용자 지정 (아래 비고란에 상세 기간 명시)
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: requested-by
+    attributes:
+      label: 요청자
+      description: 담당자 이름 및 부서
+      placeholder: "홍길동 / 데이터분석팀"
+    validations:
+      required: true
+
+  - type: input
+    id: estimate-cost
+    attributes:
+      label: 예상 월 비용
+      description: 예상되는 월 비용을 입력하세요 (추정치)
+      placeholder: "예: 500,000원"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-classification
+    attributes:
+      label: 데이터 분류
+      description: 이 POC에서 다루는 데이터의 보안 분류를 선택하세요
+      options:
+        - 공개 데이터
+        - 내부 데이터
+        - 기밀 데이터
+        - 고객 개인정보 포함
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 추가 정보
+      description: 추가 요구사항이나 특이사항이 있으면 기재하세요
+      placeholder: "추가 설정이나, 특별히 고려해야 할 사항 등을 기재하세요."
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 승인 프로세스
+        1. 이슈 제출 후 담당 팀장의 검토가 이루어집니다.
+        2. 승인 시, "승인됨" 라벨이 추가되고 자동으로 리소스 프로비저닝이 진행됩니다.
+        3. 프로비저닝 완료 후 이슈에 접근 정보가 자동으로 추가됩니다.
